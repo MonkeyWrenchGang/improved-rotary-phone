@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Intelligence ML Explainer — Jack Henry</title>
+<style>
+  :root {
+    --navy: #1B3A6E;
+    --mid-navy: #1E3A5F;
+    --teal: #0D6E8C;
+    --d-teal: #095A73;
+    --l-teal: #E8F5F9;
+    --gold: #C8972A;
+    --l-gold: #FDF3DC;
+    --white: #FFFFFF;
+    --l-bg: #F5F7FA;
+    --d-text: #1B2A40;
+    --m-gray: #64748B;
+    --l-gray: #E2E8F0;
+    --green: #16A34A;
+    --l-green: #DCFCE7;
+    --red: #DC2626;
+    --l-red: #FEE2E2;
+    --amber: #D97706;
+    --l-amber: #FEF3C7;
+    --dark: #111827;
+    --bronze: #92400E;
+    --silver: #475569;
+    --purple: #7C3AED;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Calibri, Arial, sans-serif; background: var(--l-bg); color: var(--d-text); line-height: 1.6; }
+
+  /* NAV */
+  nav { background: var(--dark); padding: 0; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--teal); }
+  .nav-inner { display: flex; align-items: center; max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 52px; gap: 0; }
+  .nav-logo { font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1px; margin-right: 32px; white-space: nowrap; }
+  .nav-links { display: flex; gap: 4px; overflow-x: auto; }
+  .nav-links a { color: #A8BBCC; font-size: 12px; text-decoration: none; padding: 6px 12px; border-radius: 4px; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+  .nav-links a:hover { background: var(--mid-navy); color: white; }
+  .nav-links a.active { background: var(--teal); color: white; }
+
+  /* HERO */
+  .hero { background: var(--dark); padding: 60px 24px 48px; text-align: center; }
+  .hero h1 { font-size: 42px; font-weight: 800; color: white; line-height: 1.15; margin-bottom: 16px; }
+  .hero h1 span { color: var(--teal); }
+  .hero p { font-size: 17px; color: #A8BBCC; max-width: 720px; margin: 0 auto 28px; }
+  .hero-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .pill { background: var(--mid-navy); border: 1px solid var(--teal); color: #C8DDEE; font-size: 12px; padding: 5px 14px; border-radius: 20px; }
+
+  /* LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  section { padding: 52px 0 40px; }
+  section + section { border-top: 1px solid var(--l-gray); }
+
+  /* SECTION HEADERS */
+  .section-tag { display: inline-block; background: var(--teal); color: white; font-size: 10px; font-weight: 700; letter-spacing: 2px; padding: 3px 10px; border-radius: 3px; margin-bottom: 12px; text-transform: uppercase; }
+  .section-title { font-size: 28px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .section-sub { font-size: 15px; color: var(--m-gray); margin-bottom: 28px; font-style: italic; }
+
+  /* PIPELINE FLOW */
+  .pipeline { display: flex; gap: 0; align-items: stretch; overflow-x: auto; padding-bottom: 8px; }
+  .pipe-stage { flex: 1; min-width: 130px; border-radius: 8px 0 0 8px; position: relative; }
+  .pipe-stage:last-child { border-radius: 0 8px 8px 0; }
+  .pipe-stage-inner { background: var(--navy); color: white; padding: 18px 14px 16px; height: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  .pipe-stage:nth-child(1) .pipe-stage-inner { background: #92400E; }
+  .pipe-stage:nth-child(3) .pipe-stage-inner { background: #475569; }
+  .pipe-stage:nth-child(5) .pipe-stage-inner { background: var(--teal); }
+  .pipe-stage:nth-child(7) .pipe-stage-inner { background: #1B3A6E; }
+  .pipe-stage:nth-child(9) .pipe-stage-inner { background: #5B21B6; }
+  .pipe-stage:nth-child(11) .pipe-stage-inner { background: var(--green); }
+  .pipe-stage:nth-child(13) .pipe-stage-inner { background: var(--amber); color: var(--d-text); }
+  .pipe-num { font-size: 10px; font-weight: 700; opacity: 0.7; letter-spacing: 1px; }
+  .pipe-icon { font-size: 24px; }
+  .pipe-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+  .pipe-sub { font-size: 10px; opacity: 0.8; line-height: 1.4; }
+  .pipe-arrow { display: flex; align-items: center; color: var(--m-gray); font-size: 18px; padding: 0 2px; }
+
+  /* LAYER CARDS */
+  .layers { display: flex; flex-direction: column; gap: 12px; }
+  .layer-card { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .layer-badge { width: 110px; min-width: 110px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px 8px; color: white; text-align: center; }
+  .layer-badge .layer-name { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; }
+  .layer-badge .layer-sub { font-size: 10px; opacity: 0.85; margin-top: 3px; font-style: italic; }
+  .layer-body { background: white; flex: 1; padding: 16px 20px; }
+  .layer-body h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .layer-body ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
+  .layer-body ul li { font-size: 12.5px; color: var(--m-gray); padding-left: 14px; position: relative; line-height: 1.45; }
+  .layer-body ul li::before { content: "·"; position: absolute; left: 0; font-weight: 700; }
+
+  /* FEATURE TABLE */
+  .feat-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .feat-table thead tr { background: var(--teal); }
+  .feat-table thead th { color: white; font-size: 12px; font-weight: 700; padding: 10px 14px; text-align: left; }
+  .feat-table tbody tr:nth-child(odd) { background: white; }
+  .feat-table tbody tr:nth-child(even) { background: var(--l-bg); }
+  .feat-table tbody td { padding: 10px 14px; font-size: 12.5px; vertical-align: middle; }
+  .feat-table .code { font-family: 'Consolas', 'Courier New', monospace; color: var(--teal); font-size: 12px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: white; }
+  .badge.high { background: var(--green); }
+  .badge.med  { background: var(--amber); }
+  .code-block { background: #0D1117; border-radius: 8px; padding: 16px 20px; font-family: 'Consolas', monospace; font-size: 13px; color: white; border: 1px solid var(--teal); margin-top: 16px; overflow-x: auto; }
+  .code-block .comment { color: #8B949E; }
+  .code-block .key { color: var(--teal); }
+  .code-block .val { color: #F8C96B; }
+
+  /* MODEL STACK */
+  .model-stack { display: flex; flex-direction: column; gap: 4px; max-width: 460px; }
+  .stack-layer { border-radius: 6px; padding: 12px 16px; color: white; }
+  .stack-layer h4 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+  .stack-layer p { font-size: 11px; opacity: 0.85; }
+
+  /* LORA DIAGRAM */
+  .lora-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+  .math-block { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .math-block h4 { font-size: 12px; font-weight: 700; color: var(--m-gray); letter-spacing: 1px; margin-bottom: 14px; text-transform: uppercase; }
+  .math-row { background: var(--l-bg); border-radius: 6px; padding: 12px 14px; margin-bottom: 8px; }
+  .math-row label { font-size: 11px; font-weight: 700; color: var(--navy); display: block; margin-bottom: 4px; }
+  .math-row code { font-family: 'Consolas', monospace; font-size: 12.5px; color: var(--d-text); }
+  .lora-visual { background: var(--dark); border-radius: 8px; padding: 24px; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .lora-box { border-radius: 6px; padding: 16px 20px; text-align: center; color: white; min-width: 100px; }
+  .lora-box .lbl { font-size: 24px; font-weight: 800; }
+  .lora-box .dim { font-size: 11px; opacity: 0.8; margin-top: 4px; }
+  .lora-box .tag { font-size: 10px; margin-top: 6px; padding: 2px 8px; border-radius: 3px; display: inline-block; }
+  .lora-plus { font-size: 28px; font-weight: 700; color: var(--gold); }
+
+  /* REAL-TIME PIPELINE */
+  .rt-steps { display: flex; flex-direction: column; gap: 10px; }
+  .rt-step { display: flex; gap: 16px; align-items: flex-start; background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .rt-num { background: var(--teal); color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .rt-time { background: var(--l-bg); color: var(--d-text); font-family: 'Consolas', monospace; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 4px; white-space: nowrap; align-self: flex-start; margin-top: 2px; }
+  .rt-content h4 { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .rt-content p { font-size: 13px; color: var(--m-gray); }
+  .latency-banner { background: var(--green); color: white; border-radius: 8px; padding: 16px 24px; text-align: center; font-weight: 700; font-size: 16px; margin-top: 16px; }
+
+  /* PAYMENT CARD */
+  .payment-card { background: var(--navy); color: white; border-radius: 10px; padding: 24px 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+  .payment-card .event-label { font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 2px; margin-bottom: 14px; }
+  .payment-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .payment-field label { font-size: 11px; color: #8BAABB; display: block; margin-bottom: 2px; }
+  .payment-field span { font-size: 14px; font-weight: 600; }
+  .payment-field span.warn { color: var(--amber); }
+
+  /* TIMELINE */
+  .timeline { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-top: 28px; }
+  .t-event { min-width: 140px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.07); }
+  .t-header { padding: 8px 12px; color: white; font-weight: 700; font-size: 14px; }
+  .t-header.green { background: var(--green); }
+  .t-header.amber { background: var(--amber); }
+  .t-header.gray { background: var(--silver); }
+  .t-body { background: white; padding: 10px 12px; }
+  .t-label { font-size: 11px; font-weight: 700; color: var(--d-text); margin-bottom: 3px; }
+  .t-time  { font-family: 'Consolas', monospace; font-size: 11px; color: var(--m-gray); margin-bottom: 3px; }
+  .t-delta { font-family: 'Consolas', monospace; font-size: 12px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .t-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: white; }
+  .t-badge.green { background: var(--green); }
+  .t-badge.amber { background: var(--amber); }
+  .t-badge.gray { background: var(--silver); }
+  .t-note { font-size: 10.5px; color: var(--m-gray); margin-top: 5px; font-style: italic; }
+
+  /* SCORE + SHAP */
+  .prediction-grid { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
+  .backbone-obs { display: flex; flex-direction: column; gap: 8px; }
+  .obs-item { display: flex; gap: 12px; background: var(--mid-navy); border-radius: 8px; padding: 12px 16px; }
+  .obs-dot { width: 6px; min-width: 6px; border-radius: 3px; }
+  .obs-dot.red { background: var(--red); }
+  .obs-dot.amber { background: var(--amber); }
+  .obs-item h5 { font-size: 12px; font-weight: 700; color: white; margin-bottom: 3px; }
+  .obs-item p { font-size: 11.5px; color: #A8BBCC; }
+  .score-card { background: var(--red); border-radius: 10px; padding: 28px; text-align: center; color: white; box-shadow: 0 6px 24px rgba(220,38,38,0.35); }
+  .score-card .score-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; opacity: 0.85; margin-bottom: 4px; }
+  .score-card .score-num { font-size: 80px; font-weight: 900; line-height: 1; }
+  .score-card .score-verdict { font-size: 13px; font-weight: 700; margin-top: 8px; letter-spacing: 0.5px; }
+  .score-card .score-thresh { background: rgba(255,255,255,0.12); border-radius: 6px; padding: 8px 14px; margin-top: 12px; font-size: 12px; }
+  .score-card .score-latency { color: var(--gold); font-size: 11px; margin-top: 8px; }
+
+  /* SHAP WATERFALL */
+  .shap-table { width: 100%; border-collapse: collapse; }
+  .shap-table th { font-size: 11px; font-weight: 700; color: var(--m-gray); padding: 6px 8px; text-align: left; border-bottom: 2px solid var(--l-gray); }
+  .shap-table td { padding: 7px 8px; vertical-align: middle; border-bottom: 1px solid var(--l-gray); }
+  .shap-row.base td { background: var(--l-bg); font-style: italic; }
+  .shap-row.final td { background: #FEE2E2; font-weight: 700; }
+  .shap-bar-cell { min-width: 240px; }
+  .shap-bar-container { position: relative; height: 22px; background: var(--l-gray); border-radius: 4px; overflow: hidden; }
+  .shap-bar { position: absolute; top: 0; height: 100%; border-radius: 4px; }
+  .shap-contrib { font-family: 'Consolas', monospace; font-size: 12px; font-weight: 700; }
+  .shap-contrib.pos { color: var(--red); }
+  .shap-contrib.neg { color: var(--green); }
+  .shap-total { font-family: 'Consolas', monospace; font-size: 13px; text-align: right; }
+  .shap-insight { background: var(--l-red); border: 1px solid var(--red); border-radius: 8px; padding: 14px 18px; margin-top: 16px; font-size: 13px; color: var(--d-text); }
+
+  /* ACTION FLOW */
+  .action-flow { display: flex; gap: 0; overflow-x: auto; padding-bottom: 8px; }
+  .action-step { flex: 1; min-width: 140px; border-radius: 0; }
+  .action-step:first-child { border-radius: 8px 0 0 8px; }
+  .action-step:last-child { border-radius: 0 8px 8px 0; }
+  .action-step-inner { padding: 18px 14px; text-align: center; color: white; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .action-icon { font-size: 24px; }
+  .action-label { font-size: 12px; font-weight: 700; }
+  .action-desc { font-size: 11px; opacity: 0.85; line-height: 1.4; }
+  .action-arrow { display: flex; align-items: center; color: var(--m-gray); font-size: 16px; padding: 0 2px; }
+
+  /* MONITORING */
+  .monitor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .monitor-card { background: white; border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; gap: 12px; align-items: flex-start; }
+  .monitor-dot { width: 6px; min-width: 6px; border-radius: 3px; margin-top: 4px; }
+  .monitor-dot.warn { background: var(--amber); }
+  .monitor-dot.crit { background: var(--red); }
+  .monitor-card h4 { font-size: 13px; font-weight: 700; color: var(--d-text); margin-bottom: 4px; }
+  .monitor-card .metric { font-size: 12px; color: var(--m-gray); margin-bottom: 3px; }
+  .monitor-card .trigger { font-size: 11.5px; color: var(--m-gray); font-style: italic; }
+  .severity-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: white; margin-top: 6px; }
+  .severity-badge.warn { background: var(--amber); }
+  .severity-badge.crit { background: var(--red); }
+
+  /* NAMESPACE CARDS */
+  .namespace-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .namespace-card { border-radius: 10px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
+  .namespace-header { padding: 18px 20px 14px; color: white; }
+  .namespace-header .ns-num { font-size: 10px; font-weight: 700; letter-spacing: 2px; opacity: 0.8; margin-bottom: 6px; }
+  .namespace-header h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+  .namespace-header p { font-size: 12px; opacity: 0.85; line-height: 1.4; }
+  .namespace-body { background: white; padding: 16px 20px; }
+  .namespace-body ul { list-style: none; }
+  .namespace-body ul li { font-size: 12.5px; color: var(--m-gray); padding: 5px 0 5px 18px; position: relative; border-bottom: 1px solid var(--l-gray); line-height: 1.45; }
+  .namespace-body ul li::before { content: "✓"; position: absolute; left: 0; color: var(--teal); font-weight: 700; font-size: 11px; }
+  .namespace-body ul li:last-child { border-bottom: none; }
+  .namespace-note { margin-top: 10px; background: var(--l-bg); border-radius: 6px; padding: 8px 12px; font-size: 11.5px; color: var(--m-gray); font-style: italic; }
+
+  /* CONSORTIUM SIGNALS */
+  .cs-signal { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 10px; }
+  .cs-strip { width: 8px; min-width: 8px; }
+  .cs-left { background: white; padding: 14px 18px; width: 260px; min-width: 260px; border-right: 1px solid var(--l-gray); }
+  .cs-left .cs-type-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: white; margin-bottom: 8px; }
+  .cs-left .cs-field { font-family: 'Consolas', monospace; font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .cs-left .cs-values { font-size: 11.5px; color: var(--m-gray); font-family: 'Consolas', monospace; }
+  .cs-right { background: white; flex: 1; padding: 14px 18px; }
+  .cs-right .cs-computed { font-size: 11px; font-weight: 700; color: var(--m-gray); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .cs-right .cs-computed-text { font-size: 13px; color: var(--d-text); margin-bottom: 10px; }
+  .cs-right .cs-signal-label { font-size: 11px; font-weight: 700; color: var(--m-gray); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .cs-right .cs-signal-text { font-size: 12.5px; color: var(--m-gray); font-style: italic; }
+  .cs-tier-bar { display: flex; gap: 10px; background: var(--dark); border-radius: 8px; padding: 14px 20px; margin-top: 16px; align-items: center; flex-wrap: wrap; }
+  .cs-tier-badge { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 14px; }
+  .cs-tier-badge .tb-label { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 3px; color: white; }
+  .cs-tier-badge p { font-size: 12px; color: #CADCFC; }
+
+  /* USE CASES */
+  .usecase-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .usecase-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .usecase-header { padding: 10px 12px; color: white; }
+  .usecase-header .uc-cat { display: inline-block; font-size: 8px; font-weight: 700; padding: 2px 7px; border-radius: 2px; background: rgba(0,0,0,0.25); margin-bottom: 6px; }
+  .usecase-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .usecase-header h4 { font-size: 12px; font-weight: 700; }
+  .usecase-body { padding: 10px 12px; }
+  .usecase-body p { font-size: 11px; color: var(--m-gray); line-height: 1.45; }
+
+  .deep-dive-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px; }
+  .deep-dive { border-radius: 10px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.08); }
+  .dd-header { padding: 20px 22px 16px; color: white; }
+  .dd-header h3 { font-size: 17px; font-weight: 800; margin-bottom: 5px; }
+  .dd-header p { font-size: 12px; opacity: 0.85; }
+  .dd-body { background: white; }
+  .dd-row { padding: 12px 22px; border-bottom: 1px solid var(--l-gray); }
+  .dd-row:last-child { border-bottom: none; }
+  .dd-row h5 { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase; }
+  .dd-row p { font-size: 12.5px; color: var(--m-gray); line-height: 1.5; }
+  .dd-row:nth-child(odd) { background: var(--l-bg); }
+
+  /* SCORE CALIBRATION */
+  .cal-steps { display: flex; flex-direction: column; gap: 8px; }
+  .cal-step { display: flex; gap: 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .cal-step-num { width: 120px; min-width: 120px; padding: 14px 12px; color: white; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; font-weight: 700; }
+  .cal-step-body { background: white; flex: 1; padding: 14px 18px; }
+  .cal-step-body h5 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
+  .cal-step-body p { font-size: 12.5px; color: var(--m-gray); }
+  .cal-table { width: 100%; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .cal-table thead tr { background: var(--teal); }
+  .cal-table thead th { color: white; font-size: 12px; font-weight: 700; padding: 10px 16px; text-align: center; }
+  .cal-table tbody tr:nth-child(odd) { background: white; }
+  .cal-table tbody tr:nth-child(even) { background: var(--l-bg); }
+  .cal-table tbody td { padding: 10px 16px; font-size: 13px; text-align: center; vertical-align: middle; }
+  .cal-ece { background: var(--dark); border-radius: 8px; padding: 16px 22px; margin-top: 16px; }
+  .cal-ece strong { color: var(--gold); }
+  .cal-ece p { font-size: 13px; color: #CADCFC; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .namespace-grid { grid-template-columns: 1fr; }
+    .usecase-grid { grid-template-columns: repeat(2, 1fr); }
+    .deep-dive-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 700px) {
+    .lora-grid { grid-template-columns: 1fr; }
+    .prediction-grid { grid-template-columns: 1fr; }
+    .monitor-grid { grid-template-columns: 1fr; }
+    .payment-fields { grid-template-columns: 1fr 1fr; }
+    .layer-body ul { grid-template-columns: 1fr; }
+    .usecase-grid { grid-template-columns: 1fr 1fr; }
+    .cs-left { width: 100%; min-width: 0; }
+    .cs-signal { flex-direction: column; }
+  }
+
+  /* FOOTER */
+  footer { background: var(--dark); color: #64748B; text-align: center; padding: 24px; font-size: 12px; margin-top: 40px; border-top: 3px solid var(--teal); }
+  footer strong { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">⚡ JH PAYMENT INTELLIGENCE</div>
+    <div class="nav-links">
+      <a href="#pipeline">Pipeline</a>
+      <a href="#features">Features</a>
+      <a href="#graph">Graph Intelligence</a>
+      <a href="#consortium">Consortium Signals</a>
+      <a href="#backbone">Backbone</a>
+      <a href="#lora">LoRA</a>
+      <a href="#realtime">Real-Time</a>
+      <a href="#walkthrough">Walkthrough</a>
+      <a href="#shap">Explanation</a>
+      <a href="#usecases">Use Cases</a>
+      <a href="#calibration">Calibration</a>
+      <a href="#api">API</a>
+      <a href="#ofac">OFAC Screening</a>
+      <a href="#monitoring">Monitoring</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>Payment Intelligence<br><span>ML Architecture Explainer</span></h1>
+  <p>From raw payment events to real-time fraud scores — with explainability at every step. Full stack: 3-namespace feature pipeline, graph intelligence, consortium signals, foundation model, LoRA fine-tuning, 10 task heads, score calibration, and a live prediction walkthrough.</p>
+  <div class="hero-pills">
+    <span class="pill">Foundation Model</span>
+    <span class="pill">LoRA Fine-Tuning</span>
+    <span class="pill">10 Task Heads</span>
+    <span class="pill">Graph Intelligence</span>
+    <span class="pill">Consortium Signals</span>
+    <span class="pill">Score Calibration</span>
+    <span class="pill">&lt;20ms Real-Time Scoring</span>
+    <span class="pill">SHAP Explanations</span>
+  </div>
+</div>
+
+<!-- SECTION 1: PIPELINE OVERVIEW -->
+<section id="pipeline">
+<div class="container">
+  <span class="section-tag">Overview</span>
+  <h2 class="section-title">Seven Stages: Raw Event to Scored Decision</h2>
+  <p class="section-sub">Each stage adds value. Each boundary adds privacy protection.</p>
+
+  <div class="pipeline">
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 1</div>
+      <div class="pipe-icon">📥</div>
+      <div class="pipe-label">INGEST</div>
+      <div class="pipe-sub">Bronze<br>Rail-native events</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 2</div>
+      <div class="pipe-icon">⚙️</div>
+      <div class="pipe-label">NORMALIZE</div>
+      <div class="pipe-sub">Silver<br>Unified schema + deltas</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 3</div>
+      <div class="pipe-icon">🔬</div>
+      <div class="pipe-label">FEATURE STORE</div>
+      <div class="pipe-sub">De-id + DP noise<br>Versioned vectors</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 4</div>
+      <div class="pipe-icon">🧠</div>
+      <div class="pipe-label">BACKBONE</div>
+      <div class="pipe-sub">Transformer<br>Pre-training</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 5</div>
+      <div class="pipe-icon">🎯</div>
+      <div class="pipe-label">FINE-TUNE</div>
+      <div class="pipe-sub">LoRA heads<br>Per-FI fraud model</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 6</div>
+      <div class="pipe-icon">⚡</div>
+      <div class="pipe-label">SCORE</div>
+      <div class="pipe-sub">Real-time<br>&lt;20ms inference</div>
+    </div></div>
+    <div class="pipe-arrow">›</div>
+    <div class="pipe-stage"><div class="pipe-stage-inner">
+      <div class="pipe-num">STAGE 7</div>
+      <div class="pipe-icon">📊</div>
+      <div class="pipe-label">MONITOR</div>
+      <div class="pipe-sub">Drift + perf<br>Retraining triggers</div>
+    </div></div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 2: DATA LAYERS -->
+<section id="features">
+<div class="container">
+  <span class="section-tag">Feature Pipeline</span>
+  <h2 class="section-title">Raw to Science Zone: Three Transformations</h2>
+  <p class="section-sub">Bronze never changes. Silver unifies. The Feature Store anonymizes and versions.</p>
+
+  <div class="layers">
+    <div class="layer-card">
+      <div class="layer-badge" style="background:#92400E;">
+        <div class="layer-name">BRONZE</div>
+        <div class="layer-sub">Raw Ingest</div>
+      </div>
+      <div class="layer-body">
+        <h4 style="color:#92400E;">Rail-native. Immutable. FI-encrypted.</h4>
+        <ul style="--dot-color:#92400E;">
+          <li style="--dot-color:#92400E;">NACHA, ISO 20022, Fedwire, RTP, FedNow stored exactly as received</li>
+          <li>Append-only with cryptographic hash on every record — no modification ever</li>
+          <li>Partitioned by rail_type / date / fi_tenant_id. FI-specific KMS keys.</li>
+          <li>No ML yet. Bronze is the audit layer and the source of truth for everything</li>
+        </ul>
+      </div>
+    </div>
+    <div class="layer-card">
+      <div class="layer-badge" style="background:#475569;">
+        <div class="layer-name">SILVER</div>
+        <div class="layer-sub">Unified Schema</div>
+      </div>
+      <div class="layer-body">
+        <h4 style="color:#475569;">18 rail types → 1 canonical schema. FI identifier intact.</h4>
+        <ul>
+          <li>Entity resolution maps originators to stable pseudonymous tokens across all rails</li>
+          <li>T₀–T₆ delta computation: 6 time intervals extracted per payment event</li>
+          <li>ACID merge/upsert handles late-arriving events (settlement confirmations up to 2 days late)</li>
+          <li>Last layer with FI attribution. Feeds both Gold (BI) and Feature Store (ML) — separate branches</li>
+        </ul>
+      </div>
+    </div>
+    <div class="layer-card">
+      <div class="layer-badge" style="background:var(--teal);">
+        <div class="layer-name">FEATURE STORE</div>
+        <div class="layer-sub">Science Layer</div>
+      </div>
+      <div class="layer-body">
+        <h4 style="color:var(--teal);">De-identified. DP-noised. Versioned. Model-ready.</h4>
+        <ul>
+          <li>Direct identifiers stripped. Pseudonymous tokens re-keyed. No FI label retained.</li>
+          <li>DP noise injected at boundary: ε ∈ [3, 8] per FI preference using DP-SGD batch noise</li>
+          <li>Output: row-level feature vectors (one per payment) — not aggregates, not summaries</li>
+          <li>Point-in-time versioned: every training run references a named, immutable dataset snapshot</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Vector Table -->
+  <h3 style="font-size:18px;font-weight:700;color:var(--navy);margin:36px 0 12px;">What Goes Into One Feature Vector</h3>
+  <p style="font-size:13px;color:var(--m-gray);margin-bottom:16px;font-style:italic;">Each payment event is tokenized into 6 fields. No PII required.</p>
+
+  <table class="feat-table">
+    <thead>
+      <tr><th>Field</th><th>Example Value</th><th>What It Encodes</th><th>Signal</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="code">event_type</td><td class="code">ACH_DEBIT</td><td>Rail + direction context (18 payment types)</td><td><span class="badge high">HIGH</span></td></tr>
+      <tr><td class="code">rail_identifier</td><td class="code">"ach_nacha_v23"</td><td>Encodes rail-specific timing physics and batch semantics</td><td><span class="badge high">HIGH</span></td></tr>
+      <tr><td class="code">direction_flag</td><td class="code">ORIGINATOR</td><td>Distinguishes originator vs destination behavior</td><td><span class="badge med">MED</span></td></tr>
+      <tr><td class="code">normalized_Δ₁</td><td class="code">0.82  (σ-scaled)</td><td>T₁−T₀: validation speed — strong anomaly signal</td><td><span class="badge high">HIGH</span></td></tr>
+      <tr><td class="code">amount_bucket</td><td class="code">BUCKET_9 ($40K–$60K)</td><td>Ordinal bucketing removes exact amount PII while preserving scale signal</td><td><span class="badge high">HIGH</span></td></tr>
+      <tr><td class="code">counterparty_hash</td><td class="code">"cpty_7f3a_v2"</td><td>Stable pseudonymous token — no real identity, but novelty signal is preserved</td><td><span class="badge med">MED</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block">
+    <span class="comment"># The full token tuple for one ACH payment event</span><br>
+    <span class="key">payment_token</span> = [<span class="val">"ACH_DEBIT"</span>, <span class="val">"ach_nacha_v23"</span>, <span class="val">"ORIG"</span>, <span class="val">0.82</span>, <span class="val">"BUCKET_9"</span>, <span class="val">"cpty_7f3a_v2"</span>]<br>
+    <span class="key">delta_sequence</span> = [<span class="val">0.82</span>, <span class="val">2.1</span>, <span class="val">40320</span>, <span class="val">None</span>, <span class="val">None</span>]  <span class="comment"># T₁−T₀ through T₅−T₄, in seconds</span>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 3: GRAPH INTELLIGENCE -->
+<section id="graph">
+<div class="container">
+  <span class="section-tag">Graph Intelligence</span>
+  <h2 class="section-title">Three Feature Namespaces</h2>
+  <p class="section-sub">The feature stack is organized into three namespaces — each capturing a different dimension of payment risk. Together, they give the model per-event, per-entity, and cross-network signal.</p>
+
+  <div class="namespace-grid">
+
+    <!-- NS1 -->
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#1B3A6E;">
+        <div class="ns-num">NAMESPACE 1</div>
+        <h3>Per-Payment Temporal</h3>
+        <p>Event-level features derived from timing, amount, and rail characteristics of each individual payment.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>Δ₁–Δ₆ timing deltas between transaction lifecycle events</li>
+          <li>Amount bucket (logarithmic decile BUCKET_0–9)</li>
+          <li>Rail type one-hot (ACH, RTP, FedNow, Wire, Card)</li>
+          <li>Day-of-week and hour-of-day embeddings</li>
+          <li>SEC code classification (PPD, CCD, WEB, TEL)</li>
+          <li>Originator-relative amount Z-score vs 90-day history</li>
+        </ul>
+        <div class="namespace-note">Used by all 10 task heads. Purely event-local — no cross-entity lookup required.</div>
+      </div>
+    </div>
+
+    <!-- NS2 -->
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#0D6E8C;">
+        <div class="ns-num">NAMESPACE 2</div>
+        <h3>Per-Entity Behavioral</h3>
+        <p>Originator-level features capturing behavioral history — built from the entity's accumulated payment record.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>6-period rolling payment volume (weekly bins)</li>
+          <li>Rail diversity score (# distinct rails used at FI)</li>
+          <li>New counterparty introduction rate (past 30 days)</li>
+          <li>Amount bucket distribution shift (KL from baseline)</li>
+          <li>Time-since-last-payment (recency signal)</li>
+          <li>Counterparty reuse ratio (loyal vs. novel recipients)</li>
+        </ul>
+        <div class="namespace-note">Requires entity embedding lookup in Feature Store. Updated incrementally at each new event.</div>
+      </div>
+    </div>
+
+    <!-- NS3 -->
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#5B21B6;">
+        <div class="ns-num">NAMESPACE 3</div>
+        <h3>Consortium Network Signal</h3>
+        <p>Cross-FI graph intelligence, pre-computed and bucketed centrally. No raw topology ever enters the Feature Store.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>counterparty_prevalence_tier — how widely seen across consortium</li>
+          <li>originator_velocity_pct — decile of graph expansion rate</li>
+          <li>network_fraud_proximity — shortest path to confirmed fraud node</li>
+          <li>community_risk_tier — community-level historical fraud rate</li>
+          <li>cross_community_flag — originator and counterparty in different clusters</li>
+        </ul>
+        <div class="namespace-note" style="border-left: 3px solid #7C3AED; background: #F5F3FF;">Privacy: Graph algorithms run centrally on de-identified Silver. Only bucketed enum scores enter Feature Store — no FI can reconstruct graph topology.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Graph architecture callout -->
+  <div style="background:var(--dark);border-radius:10px;padding:24px 28px;margin-top:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">GRAPH CONSTRUCTION</div>
+      <p style="font-size:13px;color:#CADCFC;">Bipartite graph of originators → counterparties, built nightly from de-identified Silver. Edge weights = transaction frequency. Louvain algorithm detects communities (stable via token registry).</p>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">PRIVACY BY DESIGN</div>
+      <p style="font-size:13px;color:#CADCFC;">No entity ID, FI attribution, or raw amount traverses the consortium boundary. Pseudonymous stable tokens map real entities across runs without exposing identity. Only 5 integer/enum signals leave the graph compute layer.</p>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">WHY IT MATTERS</div>
+      <p style="font-size:13px;color:#CADCFC;">Fraud rings are network phenomena — they appear as dense communities with rapid counterparty expansion. NS3 lets every FI benefit from the consortium's collective fraud detection without sharing raw transaction data.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 4: CONSORTIUM SIGNAL NAMESPACE -->
+<section id="consortium">
+<div class="container">
+  <span class="section-tag" style="background:#7C3AED;">Consortium Signals</span>
+  <h2 class="section-title">Five Bucketed Signals. No Raw Topology Exposed.</h2>
+  <p class="section-sub">Computed centrally from de-identified Silver. Only the bucketed derived score enters the Feature Store.</p>
+
+  <div class="cs-signal">
+    <div class="cs-strip" style="background:#1B3A6E;"></div>
+    <div class="cs-left">
+      <span class="cs-type-badge" style="background:#1B3A6E;">ENUM</span>
+      <div class="cs-field">counterparty_prevalence_tier</div>
+      <div class="cs-values">UNSEEN · RARE · KNOWN · ESTABLISHED</div>
+    </div>
+    <div class="cs-right">
+      <div class="cs-computed">Computed</div>
+      <div class="cs-computed-text">How widely has this counterparty token appeared across ALL consenting FIs' Silver data?</div>
+      <div class="cs-signal-label">Signal</div>
+      <div class="cs-signal-text">UNSEEN counterparty on a large-value ACH is categorically different from ESTABLISHED. Signal without revealing which FIs have seen it.</div>
+    </div>
+  </div>
+
+  <div class="cs-signal">
+    <div class="cs-strip" style="background:#7C3AED;"></div>
+    <div class="cs-left">
+      <span class="cs-type-badge" style="background:#7C3AED;">INT 0–9</span>
+      <div class="cs-field">originator_velocity_pct</div>
+      <div class="cs-values">Decile bucket (P0–P9) of counterparty graph expansion rate</div>
+    </div>
+    <div class="cs-right">
+      <div class="cs-computed">Computed</div>
+      <div class="cs-computed-text">How fast is this originator adding new counterparty tokens vs. the population distribution over rolling 30/90 days?</div>
+      <div class="cs-signal-label">Signal</div>
+      <div class="cs-signal-text">Fraud ring recruitment shows up as P9 velocity — mule accounts expanding their counterparty graph rapidly before the attack.</div>
+    </div>
+  </div>
+
+  <div class="cs-signal">
+    <div class="cs-strip" style="background:#DC2626;"></div>
+    <div class="cs-left">
+      <span class="cs-type-badge" style="background:#DC2626;">ENUM</span>
+      <div class="cs-field">network_fraud_proximity</div>
+      <div class="cs-values">DIRECT · ONE_HOP · TWO_HOP · DISTANT</div>
+    </div>
+    <div class="cs-right">
+      <div class="cs-computed">Computed</div>
+      <div class="cs-computed-text">Shortest-path distance from this entity's token to a confirmed fraud node in the consortium graph.</div>
+      <div class="cs-signal-label">Signal</div>
+      <div class="cs-signal-text">Proximity to known fraud without revealing who the fraud node is or which FI flagged them.</div>
+    </div>
+  </div>
+
+  <div class="cs-signal">
+    <div class="cs-strip" style="background:#D97706;"></div>
+    <div class="cs-left">
+      <span class="cs-type-badge" style="background:#D97706;">ENUM</span>
+      <div class="cs-field">community_risk_tier</div>
+      <div class="cs-values">LOW · MEDIUM · HIGH · ELEVATED</div>
+    </div>
+    <div class="cs-right">
+      <div class="cs-computed">Computed</div>
+      <div class="cs-computed-text">Risk tier of the community this entity belongs to, derived from the community's historical fraud prevalence rate.</div>
+      <div class="cs-signal-label">Signal</div>
+      <div class="cs-signal-text">Fraud rings form tight communities. The tier captures community-level activation before individual payment signals appear.</div>
+    </div>
+  </div>
+
+  <div class="cs-signal">
+    <div class="cs-strip" style="background:#0D6E8C;"></div>
+    <div class="cs-left">
+      <span class="cs-type-badge" style="background:#0D6E8C;">BOOL</span>
+      <div class="cs-field">cross_community_flag</div>
+      <div class="cs-values">true · false</div>
+    </div>
+    <div class="cs-right">
+      <div class="cs-computed">Computed</div>
+      <div class="cs-computed-text">Does this payment cross a community boundary? Originator and counterparty in different community clusters?</div>
+      <div class="cs-signal-label">Signal</div>
+      <div class="cs-signal-text">Most legitimate high-value payments are within established communities. Cross-community + unknown counterparty = fraud ring activation pattern.</div>
+    </div>
+  </div>
+
+  <div class="cs-tier-bar">
+    <div style="font-size:12px;font-weight:700;color:var(--gold);white-space:nowrap;margin-right:8px;">Consortium signal access by tier:</div>
+    <div class="cs-tier-badge">
+      <span class="tb-label" style="background:var(--teal);">CONTRIBUTOR</span>
+      <p>Full 5-signal namespace</p>
+    </div>
+    <div class="cs-tier-badge">
+      <span class="tb-label" style="background:var(--amber);">FEDERATED</span>
+      <p>4 signals (no proximity)</p>
+    </div>
+    <div class="cs-tier-badge">
+      <span class="tb-label" style="background:var(--silver);">OBSERVER</span>
+      <p>Prevalence tier only</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 5: BACKBONE -->
+<section id="backbone">
+<div class="container">
+  <span class="section-tag">Foundation Model</span>
+  <h2 class="section-title">Transformer Backbone: Learning Payment Physics</h2>
+  <p class="section-sub">Objective: given T₀–T₃ of a payment, predict the remaining delta sequence (T₄–T₆).</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;">
+    <div>
+      <div class="model-stack">
+        <div class="stack-layer" style="background:var(--teal);">
+          <h4>Feature Store Input</h4><p>Versioned feature vectors — one per payment event</p>
+        </div>
+        <div style="text-align:center;padding:4px 0;font-size:20px;color:var(--m-gray);">↓</div>
+        <div class="stack-layer" style="background:#1A3A6A;">
+          <h4>Embedding Layer</h4><p>token_seq → dense d=512 representation</p>
+        </div>
+        <div style="text-align:center;padding:4px 0;font-size:20px;color:var(--m-gray);">↓</div>
+        <div class="stack-layer" style="background:var(--navy);">
+          <h4>× 8 Transformer Layers</h4><p>Multi-head attention (h=8) · Positional encoding with temporal bias</p>
+        </div>
+        <div style="text-align:center;padding:4px 0;font-size:20px;color:var(--m-gray);">↓</div>
+        <div class="stack-layer" style="background:#2A2A6A;">
+          <h4>Layer Norm + FFN</h4><p>Feed-forward per position · 2048-dim hidden layer</p>
+        </div>
+        <div style="text-align:center;padding:4px 0;font-size:20px;color:var(--m-gray);">↓</div>
+        <div class="stack-layer" style="background:#1A1A4A;">
+          <h4>[CLS] Contextual Embedding</h4><p>d=512 summary vector for the full payment sequence</p>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="math-block">
+        <h4>Training Objective</h4>
+        <div class="math-row">
+          <label>Masked event prediction:</label>
+          <code>Given [T₀, T₁, T₂, T₃] → predict [Δ₄, Δ₅, Δ₆]</code>
+        </div>
+        <div class="math-row">
+          <label>Loss function:</label>
+          <code>L = CrossEntropy(σ(ŷ), y_masked) + λ‖ΔW‖²</code>
+        </div>
+        <div class="math-row">
+          <label>What the model learns:</label>
+          <code>P(Δ₄ | Δ₁, Δ₂, Δ₃, rail, amount_bucket)</code>
+        </div>
+        <div class="math-row">
+          <label>Training data source:</label>
+          <code>Feature Store — de-identified, versioned dataset snapshots from all Contributor + Federated FIs</code>
+        </div>
+      </div>
+      <div class="math-block" style="margin-top:16px;">
+        <h4>What the Backbone Learns</h4>
+        <div class="math-row">
+          <label>Cross-rail timing physics</label>
+          <code>ACH takes 2 days; RTP is instant; Wire &lt; 1hr</code>
+        </div>
+        <div class="math-row">
+          <label>Behavioral patterns</label>
+          <code>Conditional: P(T₄ fast | T₁ fast, new counterparty)</code>
+        </div>
+        <div class="math-row">
+          <label>Amount-timing correlations</label>
+          <code>High-bucket amounts have different delta distributions</code>
+        </div>
+        <div class="math-row" style="background:var(--l-gold);border:1px solid var(--gold);">
+          <label style="color:var(--amber);">Key property:</label>
+          <code>No FI identifiers in training data → backbone captures universal payment dynamics, not FI-specific patterns</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 4: LoRA -->
+<section id="lora">
+<div class="container">
+  <span class="section-tag">Fine-Tuning</span>
+  <h2 class="section-title">LoRA: Efficient Per-FI Specialization</h2>
+  <p class="section-sub">96% parameter reduction vs. full fine-tuning. Minutes, not hours. FI-owned and FI-controlled.</p>
+
+  <div class="lora-grid">
+    <div class="math-block">
+      <h4>The Math</h4>
+      <div class="math-row">
+        <label>Frozen backbone weight:</label>
+        <code>W₀ ∈ ℝ^(d×k)   where d = k = 768</code>
+      </div>
+      <div class="math-row">
+        <label>LoRA update at rank r:</label>
+        <code>ΔW = B × A   where B ∈ ℝ^(d×r), A ∈ ℝ^(r×k)</code>
+      </div>
+      <div class="math-row">
+        <label>Forward pass:</label>
+        <code>h = (W₀ + ΔW)x  =  W₀x + BAx</code>
+      </div>
+      <div class="math-row" style="background:var(--l-green);border:1px solid var(--green);">
+        <label style="color:var(--green);">Parameter efficiency (r=8):</label>
+        <code>LoRA params: 768×8 + 8×768 = 12,288<br>Full layer:  768×768 = 589,824  (96% reduction)</code>
+      </div>
+    </div>
+    <div>
+      <div class="lora-visual">
+        <div class="lora-box" style="background:var(--navy);">
+          <div class="lbl">W₀</div>
+          <div class="dim">768 × 768</div>
+          <div class="tag" style="background:#1E3450;border:1px solid var(--teal);">❄️ Frozen</div>
+        </div>
+        <div class="lora-plus">+</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="lora-box" style="background:var(--green);">
+            <div class="lbl">B</div>
+            <div class="dim">768 × 8</div>
+            <div class="tag" style="background:rgba(255,255,255,0.15);">✏️ Trainable</div>
+          </div>
+          <div class="lora-box" style="background:var(--green);">
+            <div class="lbl">A</div>
+            <div class="dim">8 × 768</div>
+            <div class="tag" style="background:rgba(255,255,255,0.15);">✏️ Trainable</div>
+          </div>
+        </div>
+        <div style="color:#A8BBCC;font-size:12px;text-align:center;max-width:120px;">
+          Only B and A learn.<br>W₀ never changes.<br><br>
+          <strong style="color:var(--gold);">12,288 params</strong><br>
+          per layer
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+        <div class="math-row">
+          <label>Training data:</label>
+          <code>FI-specific labeled fraud examples from Platinum (never shared). 500–5,000 examples typical.</code>
+        </div>
+        <div class="math-row">
+          <label>Quarterly update:</label>
+          <code>New backbone v(t+1) → LoRA delta shipped to Platinum → FI validates before applying</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 5: REAL-TIME SCORING -->
+<section id="realtime">
+<div class="container">
+  <span class="section-tag">Inference</span>
+  <h2 class="section-title">Real-Time Scoring: Under 20 Milliseconds</h2>
+  <p class="section-sub">Event-driven, zero-copy, always-on — from Kafka topic to fraud score without blocking the payment.</p>
+
+  <div class="rt-steps">
+    <div class="rt-step">
+      <div class="rt-num">1</div>
+      <div class="rt-time">&lt;1ms</div>
+      <div class="rt-content">
+        <h4>Event Arrives on Kafka / Kinesis</h4>
+        <p>Payment event published to streaming topic. Bronze write happens asynchronously — does not block the scoring path. Consumer group dedicated to real-time scoring picks up the message immediately.</p>
+      </div>
+    </div>
+    <div class="rt-step">
+      <div class="rt-num">2</div>
+      <div class="rt-time">2–4ms</div>
+      <div class="rt-content">
+        <h4>Feature Extraction (Flink / Spark Structured Streaming)</h4>
+        <p>Silver-style transforms applied in-stream: entity token lookup, delta computation against last known event graph state (Redis cache), amount bucketing. Output: the 6-field feature vector.</p>
+      </div>
+    </div>
+    <div class="rt-step">
+      <div class="rt-num">3</div>
+      <div class="rt-time">8–12ms</div>
+      <div class="rt-content">
+        <h4>Backbone Embedding (TorchServe / ONNX Runtime)</h4>
+        <p>Feature vector passed to ONNX-exported backbone on GPU or optimized CPU path. Batch-size-1 inference path. Returns d=512 [CLS] contextual embedding.</p>
+      </div>
+    </div>
+    <div class="rt-step">
+      <div class="rt-num">4</div>
+      <div class="rt-time">2–3ms</div>
+      <div class="rt-content">
+        <h4>Fraud Head Inference (FI-Specific)</h4>
+        <p>FI's LoRA adapter weights applied in-memory (pre-loaded). Classification head: Linear(512→128) → ReLU → Linear(128→1) → Sigmoid → P(fraud). Platt-calibrated score returned.</p>
+      </div>
+    </div>
+    <div class="rt-step">
+      <div class="rt-num">5</div>
+      <div class="rt-time">1–2ms</div>
+      <div class="rt-content">
+        <h4>SHAP Explanation + Routing</h4>
+        <p>SHAP values computed from pre-cached background distribution (< 1ms). Top-3 contributing features extracted. Score + features sent to FI decision system (auto-approve / monitor / queue / hold).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="latency-banner">⚡ Total end-to-end: 13–22ms  ·  P99 &lt; 30ms  ·  No payment blocked by scoring</div>
+</div>
+</section>
+
+<!-- SECTION 6: PREDICTION WALKTHROUGH -->
+<section id="walkthrough">
+<div class="container">
+  <span class="section-tag">Prediction Walkthrough</span>
+  <h2 class="section-title">Step 1: A Suspicious ACH Payment Arrives</h2>
+  <p class="section-sub">March 12, 2024 · First Community Bank (FI-A) · 9:47 AM ET</p>
+
+  <div class="payment-card">
+    <div class="event-label">INCOMING PAYMENT EVENT</div>
+    <div class="payment-fields">
+      <div class="payment-field"><label>Rail</label><span>ACH Debit (NACHA CCD)</span></div>
+      <div class="payment-field"><label>FI</label><span>First Community Bank</span></div>
+      <div class="payment-field"><label>Amount</label><span class="warn">$47,250.00</span></div>
+      <div class="payment-field"><label>Originator</label><span>ORIG-a91e (pseudonymous)</span></div>
+      <div class="payment-field"><label>Counterparty</label><span class="warn">CPTY-7f3a (FIRST SEEN)</span></div>
+      <div class="payment-field"><label>Initiated</label><span>2024-03-12  09:47:02 ET</span></div>
+    </div>
+  </div>
+
+  <h3 style="margin:28px 0 12px;font-size:16px;font-weight:700;color:var(--navy);">Event Timeline</h3>
+  <div class="timeline">
+    <div class="t-event">
+      <div class="t-header green">T₀</div>
+      <div class="t-body">
+        <div class="t-label">Origination</div>
+        <div class="t-time">09:47:02</div>
+        <div class="t-delta">—</div>
+        <div class="t-badge green">NORMAL</div>
+        <div class="t-note">Payment submitted by originator</div>
+      </div>
+    </div>
+    <div class="t-event">
+      <div class="t-header amber">T₁</div>
+      <div class="t-body">
+        <div class="t-label">Validation</div>
+        <div class="t-time">09:47:02</div>
+        <div class="t-delta">Δ₁ = 0.82s</div>
+        <div class="t-badge amber">⚠️ FAST</div>
+        <div class="t-note">Unusually fast for ACH (typical: 1.8–3.5s)</div>
+      </div>
+    </div>
+    <div class="t-event">
+      <div class="t-header green">T₂</div>
+      <div class="t-body">
+        <div class="t-label">Rail Ingest</div>
+        <div class="t-time">09:47:04</div>
+        <div class="t-delta">Δ₂ = 2.1s</div>
+        <div class="t-badge green">NORMAL</div>
+        <div class="t-note">Standard ACH batch entry</div>
+      </div>
+    </div>
+    <div class="t-event">
+      <div class="t-header green">T₃</div>
+      <div class="t-body">
+        <div class="t-label">Clearing</div>
+        <div class="t-time">20:55:12</div>
+        <div class="t-delta">Δ₃ = 11.2h</div>
+        <div class="t-badge green">NORMAL</div>
+        <div class="t-note">ACH same-day clearing window</div>
+      </div>
+    </div>
+    <div class="t-event">
+      <div class="t-header gray">T₄?</div>
+      <div class="t-body">
+        <div class="t-label">Settlement</div>
+        <div class="t-time">—</div>
+        <div class="t-delta">Δ₄ = ???</div>
+        <div class="t-badge gray">PENDING</div>
+        <div class="t-note">Next-day predicted</div>
+      </div>
+    </div>
+    <div class="t-event">
+      <div class="t-header gray">T₆?</div>
+      <div class="t-body">
+        <div class="t-label">Return Risk</div>
+        <div class="t-time">—</div>
+        <div class="t-delta">P(return) = ???</div>
+        <div class="t-badge gray">UNKNOWN</div>
+        <div class="t-note">R08/R29 risk unknown</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 7: MODEL OUTPUT + SHAP -->
+<section id="shap">
+<div class="container">
+  <span class="section-tag">Prediction + Explanation</span>
+  <h2 class="section-title">Step 2 &amp; 3: Model Score + Why?</h2>
+  <p class="section-sub">The model returns a probability and a ranked list of the features that drove it.</p>
+
+  <div class="prediction-grid">
+    <div>
+      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:12px;">What the Backbone Saw</h3>
+      <div class="backbone-obs">
+        <div class="obs-item">
+          <div class="obs-dot red"></div>
+          <div><h5>Δ₁ = 0.82s is a 3.2σ outlier</h5>
+          <p>ACH validation typically takes 1.8–3.5s. Sub-1s validation is rare and associated with automated/scripted submissions in the backbone's training distribution across all FIs.</p></div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-dot red"></div>
+          <div><h5>CPTY-7f3a is an unknown counterparty</h5>
+          <p>This token has never appeared in FI-A's Silver data. The backbone's entity embedding places it in the 'new counterparty' cluster, which has an elevated fraud prior in the backbone's learned representation.</p></div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-dot red"></div>
+          <div><h5>$47K (BUCKET_9) is a 5.1σ outlier for this originator</h5>
+          <p>ORIG-a91e has 98% of prior payments in BUCKET_4–6 ($1K–$10K range). The backbone detects this as a significant behavioral deviation specific to this originator's history.</p></div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-dot amber"></div>
+          <div><h5>Δ₃ = 11.2h is slightly fast (minor signal)</h5>
+          <p>Same-day ACH clearing usually completes in 12–14h from this originator's batch group. Slight anomaly — low weight in the final score.</p></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="score-card">
+        <div class="score-label">FRAUD SCORE</div>
+        <div class="score-num">0.942</div>
+        <div class="score-verdict">HIGH RISK · AUTO-HOLD TRIGGERED</div>
+        <div class="score-thresh">Threshold: 0.85 → Auto-hold queue</div>
+        <div class="score-latency">Calibrated P(fraud) · Base rate: 0.023<br>Consortium signals added +0.22 above temporal baseline<br>Inference latency: 17ms total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHAP Waterfall -->
+  <h3 style="font-size:18px;font-weight:700;color:var(--navy);margin:32px 0 14px;">SHAP Explanation: Why 0.942?</h3>
+  <p style="font-size:13px;color:var(--m-gray);margin-bottom:16px;font-style:italic;">Each row shows how much one feature contributed to the final score, starting from the base rate. Temporal + entity signals bring the score to 0.616; consortium network signals add a further +0.22.</p>
+
+  <table class="shap-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th class="shap-bar-cell">Contribution (SHAP)</th>
+        <th>Value</th>
+        <th style="text-align:right;">Running Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="shap-row base">
+        <td>Base rate (population fraud prior)</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:0;width:2.5%;background:var(--m-gray);"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib" style="color:var(--m-gray);">+0.023</span></td>
+        <td class="shap-total">0.023</td>
+      </tr>
+      <tr class="shap-row">
+        <td>Δ₁ = 0.82s  <em style="color:var(--m-gray);font-size:11px;">(fast ACH validation)</em></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:2.5%;width:34%;background:var(--red);"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos">+0.310</span></td>
+        <td class="shap-total">0.333</td>
+      </tr>
+      <tr class="shap-row">
+        <td>New counterparty CPTY-7f3a</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:36.5%;width:31%;background:var(--red);"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos">+0.282</span></td>
+        <td class="shap-total">0.615</td>
+      </tr>
+      <tr class="shap-row">
+        <td>Amount BUCKET_9  <em style="color:var(--m-gray);font-size:11px;">($47K outlier for originator)</em></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:67.5%;width:20.5%;background:#EF4444;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos">+0.188</span></td>
+        <td class="shap-total">0.803</td>
+      </tr>
+      <tr class="shap-row">
+        <td>Δ₃ = 11.2h  <em style="color:var(--m-gray);font-size:11px;">(slightly fast clearing)</em></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:88%;width:5.9%;background:#F87171;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos">+0.054</span></td>
+        <td class="shap-total">0.857</td>
+      </tr>
+      <tr class="shap-row">
+        <td>Rail: ACH  <em style="color:var(--m-gray);font-size:11px;">(vs. RTP baseline)</em></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:93.9%;width:4.5%;background:#FCA5A5;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos">+0.041</span></td>
+        <td class="shap-total">0.898</td>
+      </tr>
+      <!-- Section divider: Consortium -->
+      <tr>
+        <td colspan="4" style="background:#F5F3FF;padding:6px 8px;font-size:10px;font-weight:700;color:#7C3AED;letter-spacing:1.5px;border-top:2px solid #7C3AED;">
+          CONSORTIUM NETWORK SIGNALS (Namespace 3) · Added +0.22 above temporal baseline
+        </td>
+      </tr>
+      <tr class="shap-row" style="background:#FAF8FF;">
+        <td style="font-family:'Consolas',monospace;font-size:12px;color:#7C3AED;">counterparty_prevalence_tier = UNSEEN</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:61.6%;width:14.8%;background:#7C3AED;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="color:#7C3AED;">+0.140</span></td>
+        <td class="shap-total">0.756</td>
+      </tr>
+      <tr class="shap-row" style="background:#FAF8FF;">
+        <td style="font-family:'Consolas',monospace;font-size:12px;color:#6D28D9;">cross_community_flag = true</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:75.6%;width:9%;background:#6D28D9;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="color:#6D28D9;">+0.086</span></td>
+        <td class="shap-total">0.842</td>
+      </tr>
+      <tr class="shap-row" style="background:#FAF8FF;">
+        <td style="font-family:'Consolas',monospace;font-size:12px;color:#5B21B6;">network_fraud_proximity = ONE_HOP</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:84.2%;width:7%;background:#5B21B6;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="color:#5B21B6;">+0.068</span></td>
+        <td class="shap-total">0.910</td>
+      </tr>
+      <tr class="shap-row" style="background:#FAF8FF;">
+        <td style="font-family:'Consolas',monospace;font-size:12px;color:#8B5CF6;">community_risk_tier = HIGH</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:91%;width:2.6%;background:#8B5CF6;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="color:#8B5CF6;">+0.024</span></td>
+        <td class="shap-total">0.934</td>
+      </tr>
+      <tr class="shap-row" style="background:#FAF8FF;">
+        <td style="font-family:'Consolas',monospace;font-size:12px;color:#A78BFA;">originator_velocity_pct = P7</td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:93.4%;width:1.4%;background:#A78BFA;"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="color:#A78BFA;">+0.014</span></td>
+        <td class="shap-total">0.948</td>
+      </tr>
+      <tr class="shap-row">
+        <td>Δ₂ = 2.1s  <em style="color:var(--m-gray);font-size:11px;">(normal rail ingest)</em></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:94.8%;width:0.8%;background:var(--green);"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib neg">−0.008</span></td>
+        <td class="shap-total">0.940</td>
+      </tr>
+      <tr class="shap-row final">
+        <td><strong>Final fraud score (all 3 namespaces)</strong></td>
+        <td class="shap-bar-cell">
+          <div class="shap-bar-container">
+            <div class="shap-bar" style="left:0;width:100%;background:var(--red);"></div>
+          </div>
+        </td>
+        <td><span class="shap-contrib pos" style="font-size:15px;">= 0.942</span></td>
+        <td class="shap-total" style="font-size:16px;color:var(--red);">0.942</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="shap-insight">
+    <strong>Key insight:</strong> Temporal + entity signals alone reach 0.616 — already well above the soft-monitor threshold. But consortium signals add a further <strong>+0.22</strong>, revealing that CPTY-7f3a is UNSEEN across all consortium FIs, the payment crosses a community boundary, and this entity is just ONE HOP from a known fraud node. Score rises from 0.72 (temporal baseline after all positive signals) to <strong>0.942</strong> — the network already knew.
+  </div>
+
+  <div style="background:#F5F3FF;border:1px solid #7C3AED;border-radius:8px;padding:14px 18px;margin-top:12px;font-size:13px;color:var(--d-text);">
+    <strong style="color:#7C3AED;">Why consortium signals matter here:</strong> The local feature set (Δ₁ fast, new counterparty, high amount) is suspicious but could fit legitimate business patterns. The consortium network reveals that CPTY-7f3a has never appeared at any participating FI (UNSEEN) and is structurally proximate to a confirmed fraud cluster. This cross-network intelligence is invisible to any single FI operating alone.
+  </div>
+</div>
+</section>
+
+<!-- SECTION 8: SCORE TO ACTION -->
+<section>
+<div class="container">
+  <span class="section-tag">Decision &amp; Feedback</span>
+  <h2 class="section-title">Step 4: Score 0.942 → Action → Learning Loop</h2>
+  <p class="section-sub">Every analyst decision is a training label for the next model generation.</p>
+
+  <div class="action-flow">
+    <div class="action-step"><div class="action-step-inner" style="background:var(--red);">
+      <div class="action-icon">🎯</div>
+      <div class="action-label">Score: 0.942</div>
+      <div class="action-desc">Exceeds FI threshold of 0.85</div>
+    </div></div>
+    <div class="action-arrow">›</div>
+    <div class="action-step"><div class="action-step-inner" style="background:#B91C1C;">
+      <div class="action-icon">⏸️</div>
+      <div class="action-label">Payment Held</div>
+      <div class="action-desc">ACH entry batched but flagged pre-settlement</div>
+    </div></div>
+    <div class="action-arrow">›</div>
+    <div class="action-step"><div class="action-step-inner" style="background:var(--amber);">
+      <div class="action-icon">📬</div>
+      <div class="action-label">Analyst Alert</div>
+      <div class="action-desc">Score + top-3 SHAP features sent to fraud queue</div>
+    </div></div>
+    <div class="action-arrow">›</div>
+    <div class="action-step"><div class="action-step-inner" style="background:var(--navy);">
+      <div class="action-icon">🔍</div>
+      <div class="action-label">Analyst Reviews</div>
+      <div class="action-desc">Confirms or clears. Full event graph available.</div>
+    </div></div>
+    <div class="action-arrow">›</div>
+    <div class="action-step"><div class="action-step-inner" style="background:var(--green);">
+      <div class="action-icon">✅</div>
+      <div class="action-label">Decision Recorded</div>
+      <div class="action-desc">Label written to Platinum (fraud / clear)</div>
+    </div></div>
+    <div class="action-arrow">›</div>
+    <div class="action-step"><div class="action-step-inner" style="background:var(--teal);">
+      <div class="action-icon">🔁</div>
+      <div class="action-label">Retraining</div>
+      <div class="action-desc">Label queued for next fine-tune cycle</div>
+    </div></div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION: OFAC & SANCTIONS SCREENING -->
+<section id="ofac">
+<div class="container">
+  <span class="section-tag" style="background:#92400E;">Compliance Intelligence</span>
+  <h2 class="section-title">OFAC & Sanctions Screening</h2>
+  <p class="section-sub">Three layers — fuzzy name normalization, entity embedding similarity, graph proximity — working together to cut false positives while catching risk the SDN list hasn't formalized yet.</p>
+
+  <!-- Problem callout -->
+  <div style="background:#FDF3DC;border:1px solid #C8972A;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
+    <strong style="color:#92400E;">The Gap in Traditional Screening:</strong>
+    <p style="font-size:13px;color:#1B2A40;margin-top:6px;">Name-only OFAC screening compares raw strings against the SDN list. It misses <strong>transliterations</strong> (Arabic, Cyrillic, CJK script variants of the same name), <strong>aliases and AKAs</strong> in remarks fields, <strong>shell company ownership chains</strong> requiring the OFAC 50% rule, and <strong>unlisted entities</strong> whose behavioral fingerprint already matches sanctioned actors. Embedding + graph layers close all four gaps.</p>
+  </div>
+
+  <!-- Three layers -->
+  <div class="namespace-grid" style="margin-bottom:32px;">
+
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#92400E;">
+        <div class="ns-num">LAYER 1</div>
+        <h3>Fuzzy Name Matching</h3>
+        <p>Catch every orthographic variant before any embedding lookup.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>Unicode normalization (NFC/NFD) + diacritic stripping</li>
+          <li>Transliteration: Arabic → Latin, Cyrillic → Latin, CJK → Pinyin (ISO 233 / BGN-PCGN)</li>
+          <li>SDN alias expansion — every AKA enters the candidate pool</li>
+          <li>Jaro-Winkler ≥ 0.80 → candidate set, top-20 per name token</li>
+          <li>Token-set ratio for multi-word entity names</li>
+          <li>Phonetic fallback: Double Metaphone for edge-case near-misses</li>
+        </ul>
+        <div class="namespace-note"><strong>Output:</strong> ranked candidate list with <code>match_score</code> 0–1 per SDN entry</div>
+      </div>
+    </div>
+
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#0D6E8C;">
+        <div class="ns-num">LAYER 2</div>
+        <h3>Entity Embedding Similarity</h3>
+        <p>Behavioral fingerprint vs. the SDN entity embedding index.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>Foundation model backbone produces 512-dim entity embedding from payment history</li>
+          <li>SDN entity index: pre-computed embeddings for all ~15K SDN entries + known proxies</li>
+          <li>FAISS IVF-PQ approximate nearest-neighbor — cosine similarity search in ~3–5ms</li>
+          <li>Captures behavior, not just name: velocity, rail mix, counterparty graph structure</li>
+          <li>An unlisted shell company that <em>behaves</em> like a sanctioned entity scores high here</li>
+          <li>SDN embedding index refreshed nightly as new designations are published</li>
+        </ul>
+        <div class="namespace-note"><strong>Output:</strong> top-5 SDN neighbors with <code>cosine_sim</code> 0–1 and embedding source</div>
+      </div>
+    </div>
+
+    <div class="namespace-card">
+      <div class="namespace-header" style="background:#5B21B6;">
+        <div class="ns-num">LAYER 3</div>
+        <h3>Graph Proximity Score</h3>
+        <p>Consortium network hop distance to confirmed sanctioned nodes.</p>
+      </div>
+      <div class="namespace-body">
+        <ul>
+          <li>SDN entities added as special nodes in the consortium transaction graph</li>
+          <li>BFS from target entity token to nearest SDN node — depth limit: 4 hops</li>
+          <li>OFAC 50% rule: traverse ownership edges — ≥50% owned by SDN node → auto-escalate</li>
+          <li>Shell company chain detection: 3–4 hop paths common in layered structures</li>
+          <li>Correspondent banking: wire counterparty tokens checked against SDN graph</li>
+          <li>Graph refreshed nightly — new confirmed sanctions trigger immediate re-index</li>
+        </ul>
+        <div class="namespace-note" style="border-left:3px solid #7C3AED;background:#F5F3FF;"><strong>Output:</strong> <code>proximity_tier</code> (DIRECT / ONE_HOP / TWO_HOP / DISTANT) + shortest path hop count</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 5-step pipeline -->
+  <h3 style="font-size:18px;font-weight:800;color:#1B2A40;margin-bottom:6px;">5-Step Screening Pipeline: &lt;10ms End-to-End</h3>
+  <p style="font-size:13px;color:#64748B;margin-bottom:16px;font-style:italic;">All five steps run synchronously in the payment ingestion path. The ensemble score is the only output that crosses the FI boundary.</p>
+
+  <div style="background:#111827;border-radius:12px;padding:24px 28px;margin-bottom:28px;">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="background:#92400E;width:52px;min-width:52px;border-radius:8px;padding:10px 6px;text-align:center;color:white;">
+          <div style="font-size:20px;font-weight:800;">01</div>
+          <div style="font-size:10px;margin-top:2px;opacity:0.8;">&lt;1ms</div>
+        </div>
+        <div style="background:#1E3A5F;border-radius:8px;flex:1;padding:14px 18px;">
+          <h4 style="font-size:14px;font-weight:700;color:white;margin-bottom:4px;">Name Normalization</h4>
+          <p style="font-size:12.5px;color:#A8BBCC;">Unicode NFC → diacritic strip → transliteration (ISO 233 / BGN-PCGN) → alias lookup in SDN alias table → token set construction for multi-token entity names.</p>
+        </div>
+        <div style="background:#92400E;border-radius:8px;padding:12px 14px;min-width:200px;color:white;font-size:11px;">→ Normalized name tokens + alias-expanded candidate list</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="background:#D97706;width:52px;min-width:52px;border-radius:8px;padding:10px 6px;text-align:center;color:white;">
+          <div style="font-size:20px;font-weight:800;">02</div>
+          <div style="font-size:10px;margin-top:2px;opacity:0.8;">1–2ms</div>
+        </div>
+        <div style="background:#1E3A5F;border-radius:8px;flex:1;padding:14px 18px;">
+          <h4 style="font-size:14px;font-weight:700;color:white;margin-bottom:4px;">Fuzzy Match — Candidate Set</h4>
+          <p style="font-size:12.5px;color:#A8BBCC;">Jaro-Winkler ≥ 0.80 against all SDN name tokens. Token-set ratio for multi-word entities. Phonetic fallback (Double Metaphone) for names under 0.80 threshold. Top-20 candidates ranked by <code style="color:#C8972A;">fuzzy_score</code>.</p>
+        </div>
+        <div style="background:#D97706;border-radius:8px;padding:12px 14px;min-width:200px;color:white;font-size:11px;">→ [{sdn_id, fuzzy_score}, ...] max 20 entries</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="background:#0D6E8C;width:52px;min-width:52px;border-radius:8px;padding:10px 6px;text-align:center;color:white;">
+          <div style="font-size:20px;font-weight:800;">03</div>
+          <div style="font-size:10px;margin-top:2px;opacity:0.8;">3–5ms</div>
+        </div>
+        <div style="background:#1E3A5F;border-radius:8px;flex:1;padding:14px 18px;">
+          <h4 style="font-size:14px;font-weight:700;color:white;margin-bottom:4px;">Embedding Nearest-Neighbor</h4>
+          <p style="font-size:12.5px;color:#A8BBCC;">Retrieve entity embedding from Feature Store (512-dim). FAISS IVF-PQ index search over SDN embedding index (~15K entries). Top-5 nearest by cosine similarity. Embedding captures behavioral fingerprint — not name.</p>
+        </div>
+        <div style="background:#0D6E8C;border-radius:8px;padding:12px 14px;min-width:200px;color:white;font-size:11px;">→ Top-5 [{sdn_id, cosine_sim, embedding_source}]</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="background:#5B21B6;width:52px;min-width:52px;border-radius:8px;padding:10px 6px;text-align:center;color:white;">
+          <div style="font-size:20px;font-weight:800;">04</div>
+          <div style="font-size:10px;margin-top:2px;opacity:0.8;">2–3ms</div>
+        </div>
+        <div style="background:#1E3A5F;border-radius:8px;flex:1;padding:14px 18px;">
+          <h4 style="font-size:14px;font-weight:700;color:white;margin-bottom:4px;">Graph Proximity</h4>
+          <p style="font-size:12.5px;color:#A8BBCC;">BFS from entity token in consortium graph toward SDN special nodes. Depth limit: 4 hops. Ownership edge traversal for OFAC 50% rule. Returns shortest path length + all intermediate tokens (de-identified only).</p>
+        </div>
+        <div style="background:#5B21B6;border-radius:8px;padding:12px 14px;min-width:200px;color:white;font-size:11px;">→ proximity_tier + hop_count + path tokens</div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="background:#1B3A6E;width:52px;min-width:52px;border-radius:8px;padding:10px 6px;text-align:center;color:white;">
+          <div style="font-size:20px;font-weight:800;">05</div>
+          <div style="font-size:10px;margin-top:2px;opacity:0.8;">&lt;1ms</div>
+        </div>
+        <div style="background:#1E3A5F;border-radius:8px;flex:1;padding:14px 18px;">
+          <h4 style="font-size:14px;font-weight:700;color:white;margin-bottom:4px;">Ensemble Score + Routing</h4>
+          <p style="font-size:12.5px;color:#A8BBCC;">Weighted combination: <code style="color:#C8972A;">ofac_score = 0.35 · fuzzy_score + 0.40 · max(cosine_sim) + 0.25 · prox_score</code>. Proximity scores: DIRECT=1.0 | ONE_HOP=0.7 | TWO_HOP=0.4 | DISTANT=0.1. Weights tuned on historical confirmed-hit set.</p>
+        </div>
+        <div style="background:#1B3A6E;border-radius:8px;padding:12px 14px;min-width:200px;color:white;font-size:11px;">→ ofac_score 0–1 + routing decision + top evidence items</div>
+      </div>
+
+    </div>
+
+    <!-- Routing thresholds -->
+    <div style="display:flex;gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid #334155;">
+      <div style="background:#DC2626;border-radius:6px;padding:10px 18px;color:white;text-align:center;flex:1;">
+        <div style="font-size:12px;font-weight:700;font-family:Consolas,monospace;">ofac_score ≥ 0.85</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px;">AUTO_BLOCK</div>
+      </div>
+      <div style="background:#D97706;border-radius:6px;padding:10px 18px;color:white;text-align:center;flex:1;">
+        <div style="font-size:12px;font-weight:700;font-family:Consolas,monospace;">0.50 – 0.85</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px;">ANALYST REVIEW</div>
+      </div>
+      <div style="background:#16A34A;border-radius:6px;padding:10px 18px;color:white;text-align:center;flex:1;">
+        <div style="font-size:12px;font-weight:700;font-family:Consolas,monospace;">ofac_score &lt; 0.50</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px;">AUTO_CLEAR</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison table -->
+  <h3 style="font-size:18px;font-weight:800;color:#1B2A40;margin-bottom:14px;">Traditional vs. Three-Layer Screening</h3>
+  <table class="feat-table" style="margin-bottom:24px;">
+    <thead>
+      <tr>
+        <th style="width:22%;">Capability</th>
+        <th style="width:35%;background:#B91C1C;">Traditional Name-Only</th>
+        <th style="width:43%;background:#15803D;">Graph + Embedding + Fuzzy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Transliteration variants</strong></td>
+        <td>Misses non-Latin scripts. 'محمد' vs 'Mohammed' vs 'Mohamad' → 3 separate strings, often all missed.</td>
+        <td>Layer 1 normalizes all variants to canonical Latin before matching. Same token pool regardless of script.</td>
+      </tr>
+      <tr>
+        <td><strong>SDN aliases &amp; AKAs</strong></td>
+        <td>Some implementations only match primary name. Aliases in remarks field often ignored.</td>
+        <td>Full alias expansion: every AKA in the SDN entry enters the candidate pool. No alias ever excluded.</td>
+      </tr>
+      <tr>
+        <td><strong>50% ownership rule</strong></td>
+        <td>No ownership graph. 50% rule requires manual research — not enforced automatically at transaction time.</td>
+        <td>Layer 3 ownership edge traversal: if target is ≥50% owned by SDN node (within 4 hops), auto-escalate at ingestion.</td>
+      </tr>
+      <tr>
+        <td><strong>Unlisted behavioral proxies</strong></td>
+        <td>Zero signal for entities NOT on SDN list. Miss until formally listed.</td>
+        <td>Layer 2 embedding: behavioral fingerprint compared against SDN embedding index. Signal before listing.</td>
+      </tr>
+      <tr>
+        <td><strong>False positive rate</strong></td>
+        <td>High. Common names generate constant analyst noise. Typical FI: 1,000+ review queue per day.</td>
+        <td>Embedding + graph convergence required for escalation. Name-only match without behavioral evidence → auto-clear. 60–80% FPR reduction.</td>
+      </tr>
+      <tr>
+        <td><strong>Correspondent / wire coverage</strong></td>
+        <td>SWIFT BIC/IBAN screening only. Beneficial owner of counterparty bank rarely checked.</td>
+        <td>Graph traversal checks beneficiary entity token against consortium network — catches indirect exposure.</td>
+      </tr>
+      <tr>
+        <td><strong>Audit trail</strong></td>
+        <td>Match = name comparison score only. Limited explainability for regulators.</td>
+        <td>Full evidence record: fuzzy_score + cosine_sim + graph path + ensemble weights. SHAP-compatible. OFAC exam ready.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Regulatory callout -->
+  <div style="background:#1B3A6E;border-radius:10px;padding:20px 26px;">
+    <div style="font-size:10px;font-weight:700;color:#C8972A;letter-spacing:2px;margin-bottom:10px;">REGULATORY DESIGN</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+      <div>
+        <h5 style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">Documentation</h5>
+        <p style="font-size:12.5px;color:#CADCFC;">Every screening decision stores: fuzzy_score, cosine_sim, proximity_tier, ensemble weights, and top contributing evidence items. Exportable per decision for OFAC exam response.</p>
+      </div>
+      <div>
+        <h5 style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">Threshold Governance</h5>
+        <p style="font-size:12.5px;color:#CADCFC;">AUTO_BLOCK / REVIEW / CLEAR thresholds are FI-configurable in the Platinum compliance console. Changes require documented compliance justification stored in audit log.</p>
+      </div>
+      <div>
+        <h5 style="font-size:13px;font-weight:700;color:white;margin-bottom:6px;">SDN List Currency</h5>
+        <p style="font-size:12.5px;color:#CADCFC;">OFAC SDN list updates (published at ~10AM ET) trigger automatic re-index of the fuzzy candidate table, SDN embedding index, and consortium graph SDN node set within 15 minutes.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION 9: MONITORING -->
+<section id="monitoring">
+<div class="container">
+  <span class="section-tag">Monitoring</span>
+  <h2 class="section-title">Always-On Model Health</h2>
+  <p class="section-sub">Five dimensions of drift detection. FI-configurable thresholds. Retraining triggered automatically.</p>
+
+  <div class="monitor-grid">
+    <div class="monitor-card">
+      <div class="monitor-dot warn"></div>
+      <div>
+        <h4>Data Drift</h4>
+        <div class="metric">Metric: KL Divergence on Δ distributions per rail</div>
+        <div class="trigger">Trigger: KL &gt; 0.15 on any rail</div>
+        <div><span class="severity-badge warn">WARNING</span></div>
+      </div>
+    </div>
+    <div class="monitor-card">
+      <div class="monitor-dot warn"></div>
+      <div>
+        <h4>Concept Drift</h4>
+        <div class="metric">Metric: PSI on fraud score distribution (month-over-month)</div>
+        <div class="trigger">Trigger: PSI &gt; 0.20</div>
+        <div><span class="severity-badge warn">WARNING</span></div>
+      </div>
+    </div>
+    <div class="monitor-card">
+      <div class="monitor-dot crit"></div>
+      <div>
+        <h4>Performance Degradation</h4>
+        <div class="metric">Metric: AUC-PR drop on labeled holdout set</div>
+        <div class="trigger">Trigger: AUC drops &gt; 3 percentage points</div>
+        <div><span class="severity-badge crit">CRITICAL</span></div>
+      </div>
+    </div>
+    <div class="monitor-card">
+      <div class="monitor-dot warn"></div>
+      <div>
+        <h4>Feature Skew</h4>
+        <div class="metric">Metric: Schema match + null rate monitoring</div>
+        <div class="trigger">Trigger: Null rate &gt; 5% on key feature fields</div>
+        <div><span class="severity-badge warn">WARNING</span></div>
+      </div>
+    </div>
+    <div class="monitor-card">
+      <div class="monitor-dot warn"></div>
+      <div>
+        <h4>Label Drift</h4>
+        <div class="metric">Metric: Analyst confirm/clear ratio shift</div>
+        <div class="trigger">Trigger: Ratio shift &gt; 20% over 30-day window</div>
+        <div><span class="severity-badge warn">WARNING</span></div>
+      </div>
+    </div>
+    <div class="monitor-card" style="background:var(--l-gold);border:1px solid var(--gold);">
+      <div class="monitor-dot" style="background:var(--gold);"></div>
+      <div>
+        <h4 style="color:var(--amber);">Retraining Policy</h4>
+        <div class="metric">CRITICAL → immediate retraining trigger</div>
+        <div class="trigger">WARNING (2+ signals) → next quarterly cycle<br>All thresholds FI-configurable in Platinum</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION: USE CASES -->
+<section id="usecases">
+<div class="container">
+  <span class="section-tag">Task Head Library</span>
+  <h2 class="section-title">One Foundation Model. Ten Task Heads.</h2>
+  <p class="section-sub">The backbone's payment event embeddings are reusable across every FI intelligence use case. Each head is a lightweight classifier or regression layer fine-tuned independently.</p>
+
+  <div class="usecase-grid">
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#DC2626;"><span class="uc-cat">Risk</span><span class="usecase-icon">🚨</span><h4>ACH Fraud</h4></div>
+      <div class="usecase-body"><p>Binary P(fraud) on ACH debit events. Primary walkthrough use case. Real-time &lt;20ms. Requires Contributor tier.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#B91C1C;"><span class="uc-cat">Risk</span><span class="usecase-icon">⚡</span><h4>Instant Pay Fraud</h4></div>
+      <div class="usecase-body"><p>Sub-second RTP/FedNow decision. Tighter threshold, lighter head, higher precision requirement. &lt;10ms.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#D97706;"><span class="uc-cat">Growth</span><span class="usecase-icon">🏡</span><h4>Household Expansion</h4></div>
+      <div class="usecase-body"><p>Identify household clusters from payment patterns. Target generational wealth flows moving to external FIs. Household Influence Score per entity.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#7C3AED;"><span class="uc-cat">Risk</span><span class="usecase-icon">🕸️</span><h4>Money Mule</h4></div>
+      <div class="usecase-body"><p>Entity-level risk score for mule activity. Graph velocity + community features dominate. Batch scoring, BSA/AML workflow integration.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#0D6E8C;"><span class="uc-cat">Retention</span><span class="usecase-icon">📉</span><h4>Customer Churn</h4></div>
+      <div class="usecase-body"><p>Declining payment volume → P(churn in 90 days). Delta sequence degradation as leading indicator. Daily batch, CRM integration.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#1B3A6E;"><span class="uc-cat">Treasury</span><span class="usecase-icon">💧</span><h4>Liquidity Stress</h4></div>
+      <div class="usecase-body"><p>Regression: intraday net settlement exposure. Morning payment flow → afternoon funding gap forecast. 15-min batch refresh.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#0F766E;"><span class="uc-cat">Onboarding</span><span class="usecase-icon">🆕</span><h4>Synthetic Identity</h4></div>
+      <div class="usecase-body"><p>New account payment pattern vs. synthetic ID behavioral signature. Enrollment-time scoring + ongoing monitoring.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#92400E;"><span class="uc-cat">Anomaly</span><span class="usecase-icon">💤</span><h4>Dormant Reactivation</h4></div>
+      <div class="usecase-body"><p>Dormant account suddenly receiving large/frequent payments. Characteristic delta signature — takeover or mule indicator.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#1E3A5F;"><span class="uc-cat">Risk</span><span class="usecase-icon">🌐</span><h4>Wire Anomaly</h4></div>
+      <div class="usecase-body"><p>Large-value wire outlier detection. Amount + timing + counterparty novelty against wire history. Real-time &lt;30ms.</p></div>
+    </div>
+    <div class="usecase-card">
+      <div class="usecase-header" style="background:#16A34A;"><span class="uc-cat">Portfolio</span><span class="usecase-icon">📊</span><h4>Counterparty Risk</h4></div>
+      <div class="usecase-body"><p>Ongoing risk tier for each counterparty entity. Consortium graph prevalence + fraud proximity dominant signals. Weekly batch.</p></div>
+    </div>
+  </div>
+
+  <!-- Deep dives -->
+  <div class="deep-dive-grid">
+    <div class="deep-dive">
+      <div class="dd-header" style="background:#0D6E8C;">
+        <h3>Customer Churn Prediction</h3>
+        <p>Payment behavior decline as a leading indicator of customer churn</p>
+      </div>
+      <div class="dd-body">
+        <div class="dd-row"><h5 style="color:#0D6E8C;">The Signal</h5><p>Declining payment volume, increasing payment gaps, migration of payment types away from FI rails. ACH volume drops as customer moves to competitor.</p></div>
+        <div class="dd-row"><h5 style="color:#0D6E8C;">Feature Design</h5><p>Time series of weekly payment volume (last 6 periods). Delta-between-transactions growing week-over-week. Rail diversity score. New counterparty introduction rate declining.</p></div>
+        <div class="dd-row"><h5 style="color:#0D6E8C;">Head Architecture</h5><p>Regression: P(volume decline &gt;40% in 90 days). Or classification: P(churn = account closure or &gt;80% volume loss). Trained on Platinum FI-specific churn history.</p></div>
+        <div class="dd-row"><h5 style="color:#0D6E8C;">Consortium Lift</h5><p>originator_velocity_pct can signal that an originator is increasing volume at OTHER FIs — silent defection before it shows in FI-local data. Observer tier is sufficient.</p></div>
+        <div class="dd-row"><h5 style="color:#0D6E8C;">Output</h5><p>Daily churn risk score per business customer. Feeds CRM for proactive retention outreach.</p></div>
+      </div>
+    </div>
+
+    <div class="deep-dive">
+      <div class="dd-header" style="background:#D97706;">
+        <h3>Household Wealth Expansion</h3>
+        <p>Generational wealth deflection detection + household relationship mapping</p>
+      </div>
+      <div class="dd-body">
+        <div class="dd-row"><h5 style="color:#D97706;">The Signal</h5><p>Recurring ACH to external accounts with shared surname tokens or address proximity. Round-amount periodic transfers (gift patterns). Estate signature: large one-time disbursement to 2–5 distinct counterparties.</p></div>
+        <div class="dd-row"><h5 style="color:#D97706;">Feature Design</h5><p>Household cluster score: originator→counterparty co-occurrence frequency with name/address tokens. Gift velocity index. External FI concentration (% ACH to non-consortium accounts).</p></div>
+        <div class="dd-row"><h5 style="color:#D97706;">Head Architecture</h5><p>Multi-output: (1) Household Influence Score (HIS, 0–1). (2) Expansion Opportunity Flag — binary signal that a new household member appeared in payment flows. Trained on CRM household link confirmations.</p></div>
+        <div class="dd-row"><h5 style="color:#D97706;">Consortium Lift</h5><p>counterparty_prevalence_tier = UNSEEN means a counterparty does NOT appear at any consortium FI — almost certainly not an existing FI customer. UNSEEN + household cluster = high-confidence external family member for targeting.</p></div>
+        <div class="dd-row"><h5 style="color:#D97706;">Output</h5><p>Daily batch: ranked Household Expansion Opportunities for growth / wealth management CRM. Drives advisor outreach, trust &amp; estate referrals, family plan onboarding.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION: SCORE CALIBRATION -->
+<section id="calibration">
+<div class="container">
+  <span class="section-tag">Model Reliability</span>
+  <h2 class="section-title">Calibrated Scores = True Probabilities</h2>
+  <p class="section-sub">Raw sigmoid output is not a probability. Platt scaling maps model scores to reliable risk estimates — enabling correct threshold-setting, cost-benefit analysis, and regulatory defensibility.</p>
+
+  <div class="lora-grid">
+    <div>
+      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;">How Platt Scaling Works</h3>
+      <div class="cal-steps">
+        <div class="cal-step">
+          <div class="cal-step-num" style="background:var(--teal);">1 · Pre-training</div>
+          <div class="cal-step-body"><h5>Foundation model trains with focal loss</h5><p>Final layer applies sigmoid. Raw output f(x) ∈ [0,1] but is NOT a calibrated probability — the model is often overconfident in high-score buckets.</p></div>
+        </div>
+        <div class="cal-step">
+          <div class="cal-step-num" style="background:var(--teal);">2 · Calibration Set</div>
+          <div class="cal-step-body"><h5>10–15% of confirmed FI labels held out</h5><p>This data is NEVER used during training or fine-tuning. It exists solely to fit the calibration parameters A and B.</p></div>
+        </div>
+        <div class="cal-step">
+          <div class="cal-step-num" style="background:var(--teal);">3 · Platt Fit</div>
+          <div class="cal-step-body"><h5>P(fraud) = σ(A · f(x) + B)</h5><p>Fit logistic regression on the calibration set to minimize NLL. Result: any model score f(x) maps to a true posterior probability. Takes seconds — no retraining.</p></div>
+        </div>
+        <div class="cal-step">
+          <div class="cal-step-num" style="background:var(--teal);">4 · Per-Head</div>
+          <div class="cal-step-body"><h5>Each task head gets its own A, B pair</h5><p>ACH fraud, churn, liquidity — each has different class imbalance and score distribution. Shared calibration would be wrong.</p></div>
+        </div>
+        <div class="cal-step">
+          <div class="cal-step-num" style="background:var(--gold);">5 · Platinum Tier</div>
+          <div class="cal-step-body"><h5>Per-FI recalibration from Platinum data</h5><p>A large commercial FI may see 3× the base fraud rate of the consortium average. Platt parameters must reflect local base rates — not the consortium mean.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;">What Good Calibration Looks Like</h3>
+      <p style="font-size:12px;color:var(--m-gray);margin-bottom:12px;font-style:italic;">ACH Fraud Head — actual fraud rates by predicted score bucket on hold-out evaluation set.</p>
+      <table class="cal-table">
+        <thead>
+          <tr>
+            <th>Score Band</th>
+            <th>Uncalibrated<br>Actual Rate</th>
+            <th>Post-Platt<br>Actual Rate</th>
+            <th>Gap</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0.0 – 0.2</td><td style="color:var(--amber);">0.9%</td><td style="color:var(--green);font-weight:700;">1.2%</td><td style="color:var(--m-gray);">+0.3%</td></tr>
+          <tr><td>0.2 – 0.4</td><td style="color:var(--amber);">3.1%</td><td style="color:var(--green);font-weight:700;">4.7%</td><td style="color:var(--amber);">+1.6%</td></tr>
+          <tr><td>0.4 – 0.6</td><td style="color:var(--amber);">8.2%</td><td style="color:var(--green);font-weight:700;">11.4%</td><td style="color:var(--amber);">+3.2%</td></tr>
+          <tr><td>0.6 – 0.8</td><td style="color:var(--amber);">18.4%</td><td style="color:var(--green);font-weight:700;">22.1%</td><td style="color:var(--amber);">+3.7%</td></tr>
+          <tr><td>0.8 – 1.0</td><td style="color:var(--amber);">41.2%</td><td style="color:var(--green);font-weight:700;">45.8%</td><td style="color:var(--red);">+4.6%</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:11.5px;color:var(--m-gray);margin-top:10px;font-style:italic;">↑ Uncalibrated scores systematically underestimate fraud probability in high-score buckets. Thresholds set on raw scores will under-hold high-risk transactions.</p>
+      <div class="cal-ece">
+        <strong>Drift Monitoring:</strong>
+        <p>ECE (Expected Calibration Error) computed per head on each scoring cycle. Alert threshold: ECE &gt; 0.03. Triggered recalibration runs automatically from latest Platinum-labeled data — no model retraining required.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- SECTION: API SURFACE -->
+<section id="api">
+<div class="container">
+  <span class="section-tag">Integration</span>
+  <h2 class="section-title">API Surface</h2>
+  <p class="section-sub">Four endpoints. Prediction and explanation are intentionally separate — only a fraction of predictions need to be explained. Label capture closes the learning loop.</p>
+
+  <!-- POST /v1/predict -->
+  <div style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="background:var(--teal);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;font-family:Consolas,monospace;">POST</span>
+      <code style="font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--navy);">/v1/predict</code>
+      <span style="font-size:13px;color:var(--m-gray);">Submit a payment event. Returns score + routing decision. &lt;20ms p99.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">REQUEST</div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"event_id"</span>: <span class="val">"evt_8a2f..."</span>,
+  <span class="key">"fi_id"</span>:    <span class="val">"fi_firstcommunity"</span>,
+  <span class="key">"head"</span>:     <span class="val">"ach_fraud"</span>,
+  <span class="key">"payment"</span>: {
+    <span class="key">"rail"</span>:         <span class="val">"ACH"</span>,
+    <span class="key">"amount_cents"</span>: <span class="val">4725000</span>,
+    <span class="key">"originator_id"</span>:<span class="val">"ORIG-a91e"</span>,
+    <span class="key">"counterparty_id"</span>:<span class="val">"CPTY-7f3a"</span>,
+    <span class="key">"initiated_at"</span>: <span class="val">"2024-03-12T09:47:02Z"</span>
+  }
+}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">RESPONSE  <span style="color:var(--green);">200 OK</span></div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"event_id"</span>:      <span class="val">"evt_8a2f..."</span>,
+  <span class="key">"score"</span>:         <span class="val">0.942</span>,
+  <span class="key">"calibrated"</span>:    <span class="val">true</span>,
+  <span class="key">"action"</span>:        <span class="val">"AUTO_HOLD"</span>,
+  <span class="key">"threshold_used"</span>:<span class="val">0.85</span>,
+  <span class="key">"latency_ms"</span>:    <span class="val">17</span>,
+  <span class="key">"explainable"</span>:   <span class="val">true</span>  <span class="comment">// call /explain if needed</span>
+}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST /v1/explain -->
+  <div style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="background:#5B21B6;color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;font-family:Consolas,monospace;">POST</span>
+      <code style="font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--navy);">/v1/explain</code>
+      <span style="font-size:13px;color:var(--m-gray);">Returns SHAP waterfall for a prediction. Intentionally async — call only when analyst needs to review.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">REQUEST</div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"fi_id"</span>:         <span class="val">"fi_firstcommunity"</span>,
+  <span class="key">"top_k"</span>:         <span class="val">10</span>  <span class="comment">// top K SHAP features</span>
+}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">RESPONSE  <span style="color:var(--green);">200 OK</span></div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"base_value"</span>:    <span class="val">0.023</span>,
+  <span class="key">"final_score"</span>:   <span class="val">0.942</span>,
+  <span class="key">"features"</span>: [
+    { <span class="key">"name"</span>:<span class="val">"delta_1_seconds"</span>,
+      <span class="key">"value"</span>:<span class="val">0.82</span>, <span class="key">"shap"</span>:<span class="val">+0.310</span>,
+      <span class="key">"namespace"</span>:<span class="val">"temporal"</span> },
+    { <span class="key">"name"</span>:<span class="val">"counterparty_prevalence_tier"</span>,
+      <span class="key">"value"</span>:<span class="val">"UNSEEN"</span>, <span class="key">"shap"</span>:<span class="val">+0.140</span>,
+      <span class="key">"namespace"</span>:<span class="val">"consortium"</span> },
+    <span class="comment">// ... top_k features</span>
+  ]
+}</div>
+      </div>
+    </div>
+    <div style="background:var(--l-gold);border:1px solid var(--gold);border-radius:6px;padding:10px 14px;margin-top:10px;font-size:12.5px;color:var(--d-text);">
+      <strong>Design principle:</strong> Explanation is decoupled from prediction. Real-time scoring skips SHAP computation entirely — saving ~2–4ms per call. Explanation is triggered on-demand when an analyst opens a case, or via policy (e.g., "always explain AUTO_HOLD decisions with score &gt; 0.90").
+    </div>
+  </div>
+
+  <!-- POST /v1/label -->
+  <div style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="background:var(--green);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;font-family:Consolas,monospace;">POST</span>
+      <code style="font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--navy);">/v1/label</code>
+      <span style="font-size:13px;color:var(--m-gray);">Submit analyst decision. Closes the learning loop — feeds next retraining cycle.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">REQUEST</div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"fi_id"</span>:         <span class="val">"fi_firstcommunity"</span>,
+  <span class="key">"label"</span>:         <span class="val">"FRAUD_CONFIRMED"</span>,
+  <span class="comment">// FRAUD_CONFIRMED | CLEARED | UNRESOLVED</span>
+  <span class="key">"analyst_id"</span>:    <span class="val">"analyst_823"</span>,
+  <span class="key">"notes"</span>:         <span class="val">"R29 unauthorized confirmed"</span>
+}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">RESPONSE  <span style="color:var(--green);">202 Accepted</span></div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"label_id"</span>:      <span class="val">"lbl_7e3b..."</span>,
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"status"</span>:        <span class="val">"QUEUED_FOR_TRAINING"</span>,
+  <span class="key">"training_cycle"</span>:<span class="val">"next_quarterly"</span>,
+  <span class="key">"calibration_eligible"</span>:<span class="val">true</span>
+}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /v1/predictions/{id} -->
+  <div style="margin-bottom:16px;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <span style="background:var(--amber);color:white;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;font-family:Consolas,monospace;">GET</span>
+      <code style="font-family:Consolas,monospace;font-size:16px;font-weight:700;color:var(--navy);">/v1/predictions/{prediction_id}</code>
+      <span style="font-size:13px;color:var(--m-gray);">Retrieve a stored prediction with score, action, and label status.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">PATH PARAMETER</div>
+        <div class="code-block" style="font-size:12px;">GET /v1/predictions/pred_4c9a...
+<span class="comment">
+# Headers:
+# X-FI-ID: fi_firstcommunity
+# Authorization: Bearer &lt;token&gt;</span></div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--m-gray);letter-spacing:1px;margin-bottom:6px;">RESPONSE  <span style="color:var(--green);">200 OK</span></div>
+        <div class="code-block" style="font-size:12px;">{
+  <span class="key">"prediction_id"</span>: <span class="val">"pred_4c9a..."</span>,
+  <span class="key">"score"</span>:         <span class="val">0.942</span>,
+  <span class="key">"action"</span>:        <span class="val">"AUTO_HOLD"</span>,
+  <span class="key">"label_status"</span>: <span class="val">"FRAUD_CONFIRMED"</span>,
+  <span class="key">"head"</span>:          <span class="val">"ach_fraud"</span>,
+  <span class="key">"scored_at"</span>:    <span class="val">"2024-03-12T09:47:02Z"</span>,
+  <span class="key">"retained_days"</span>:<span class="val">90</span>  <span class="comment">// FI-configurable</span>
+}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Design notes -->
+  <div style="background:var(--dark);border-radius:10px;padding:22px 26px;margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">LATENCY SPLIT</div>
+      <p style="font-size:12.5px;color:#CADCFC;">/predict: &lt;20ms p99. /explain: ~80–150ms (SHAP is compute-heavy). Separation means the scoring path is never blocked by explanation computation.</p>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">LABEL ECONOMICS</div>
+      <p style="font-size:12.5px;color:#CADCFC;">Only ~3–8% of scored predictions are ever labeled (analyst reviews). /label is therefore low-volume but high-value — each confirmed label is worth months of model signal for small FIs.</p>
+    </div>
+    <div>
+      <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:8px;">TENANCY + ISOLATION</div>
+      <p style="font-size:12.5px;color:#CADCFC;">All API calls are scoped to fi_id. Platinum model weights, calibration parameters, and retention settings are isolated per FI. No cross-FI data leakage is possible at the API layer.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<footer>
+  <strong>Jack Henry &amp; Associates</strong> · Payment Intelligence Platform · ML Architecture Series<br>
+  Foundation model + per-FI LoRA · 3-namespace features · 10 task heads · score calibration · SHAP explanations
+</footer>
+
+<script>
+  // Highlight active nav section on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
